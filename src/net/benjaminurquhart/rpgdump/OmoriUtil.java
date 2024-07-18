@@ -29,8 +29,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class OmoriUtil {
 	
-	// These are not the decryption keys.
-	// Buy the game genius.
+	// These are key hashes, to verify that the key is correct
+	// The decryption key for OMORI 1.0.0 appears to be detected automatically
+	// The decryption keys for further versions are found in OMORI's launch options-
+	// - which you can find here: https://steamdb.info/app/1150690/config
 	public static final String OLD_KEY_HASH = "06494167914dab96fc9e58b5e2ee9eb98ad230edd6048d2134b8e18a0726f7c4";
 	public static final String KEY_HASH = "b1d50d2686248fc493b71cd490cb88ac75e71caff236fdb4ab9fa78a36319e11";
 	
@@ -68,42 +70,11 @@ public class OmoriUtil {
 			}
 		}
 		
-		if(!hash.equals(KEY_HASH)) {
-			File steamAppInfo = new File(RPGMakerUtil.getSteamFolder(), "appcache/appinfo.vdf");
-			if(!steamAppInfo.exists()) {
-				throw new IllegalStateException("Steam not installed");
-			}
-			System.out.println("Attempting to pull key from Steam appinfo...");
-			System.out.println("File: " + steamAppInfo.getAbsolutePath());
-			
-			FileInputStream stream = new FileInputStream(steamAppInfo);
-			StringBuilder sb = new StringBuilder();
-			byte[] buff = new byte[1024];
-			int read;
-			
-			while((read = stream.read(buff)) != -1) {
-				for(int i = 0; i < read; i++) {
-					sb.append((char)buff[i]);
-				}
-			}
-			stream.close();
-			
-			Matcher matcher = KEY_PATTERN.matcher(sb.toString());
-			String candidate = null;
-			boolean success = false;
-			
-			while(matcher.find()) {
-				candidate = matcher.group(1);
-				if(hash(candidate).equals(KEY_HASH)) {
-					success = true;
-					break;
-				}
-			}
-			if(!success) {
-				throw new IllegalStateException("OMORI not Steam installed");
-			}
+		if(!hash.equals(KEY_HASH)) {			
+			// --6bdb2e585882fbd48826ef9cffd4c511 is v1.0.8's launch option
+			// which means that 6bdb2e585882fbd48826ef9cffd4c511 is the decryption key
 			System.out.println("Found decryption key.");
-			decryptionKey = candidate;
+			decryptionKey = "6bdb2e585882fbd48826ef9cffd4c511";
 		}
 		
 		OmoriUtil.decryptionKey = decryptionKey;
